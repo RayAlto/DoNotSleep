@@ -55,7 +55,7 @@ constexpr std::string_view jsoncpp_valuetype_str(const Json::ValueType& value_ty
   }
 }
 
-static const std::filesystem::path CONFIG_FILE = std::filesystem::path{".do_not_sleep"} / "conf";
+static const std::filesystem::path CONFIG_FILE = std::filesystem::path{".config"} / "do_not_sleep" / "conf";
 
 Config Config::from_json(const std::filesystem::path& config_dir) {
   Config conf;
