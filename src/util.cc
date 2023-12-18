@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <mutex>
-#include <sstream>
+#include <ostream>
 
 namespace ds {
 
@@ -30,16 +30,14 @@ std::optional<std::string> getenv_safe(std::string_view key) {
 
 std::ostream& log_error(const std::string_view& file, const std::uint_fast32_t& line, const bool& err) {
   std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-  std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-  const std::tm& now_time_tm = localtime_safe(now_time_t);
+  const std::tm& now_time_tm = localtime_safe(std::chrono::system_clock::to_time_t(now));
   std::int_fast64_t now_ms
     = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
+  std::ostream& out = (err ? std::cerr : std::cout);
+  const char fill_prev = out.fill();
   /* [YYYY-MM-DDThh:mm:ss.sss](__FILE__:__LINE__): MSG */
-  std::ostringstream pre_info_ss;
-  pre_info_ss << '[' << std::put_time(&now_time_tm, "%FT%T") << '.' << std::setfill('0') << std::setw(3) << now_ms
-              << "](" << file << ':' << line << "): ";
-  std::ostream& out = err ? std::cerr : std::cout;
-  return out << pre_info_ss.str();
+  return out << '[' << std::put_time(&now_time_tm, "%FT%T") << '.' << std::setfill('0') << std::setw(3) << now_ms
+             << std::setfill(fill_prev) << "](" << file << ':' << line << "): ";
 }
 
 } // namespace ds
