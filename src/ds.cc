@@ -37,7 +37,7 @@ void DoNotSleep::start() {
   }
   while (true) {
     if (!HMS::now().between(config_.time_range)) {
-      DS_LOG << "zzz\n";
+      DS_LOG << "zzz\n" << std::flush;
       std::this_thread::sleep_for(config_.interval);
       continue;
     }
@@ -85,10 +85,10 @@ void DoNotSleep::tick_tock_(const std::filesystem::path& dir) {
       ds_file.close();
       return;
     }
-    DS_LOG << dir << " tick.\n";
+    DS_LOG << dir << " tick.\n" << std::flush;
     ds_file.write(reinterpret_cast<const char*>(rand_byte_buf), DS_RAND_BYTE_COUNT_);
   } else {
-    DS_LOG << dir << " tock.\n";
+    DS_LOG << dir << " tock.\n" << std::flush;
   }
   ds_file.close();
 }
