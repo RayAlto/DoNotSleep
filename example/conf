@@ -1,0 +1,18 @@
+// ~/.config/do_not_sleep/conf
+
+{
+  "dirs": [
+    "/mnt/disk1",
+    "/mnt/disk2"
+  ],
+  // every 2 minutes
+  "interval": 120,
+  "time_range": {
+    // start from 07:00:00
+    "start": [7, 0, 0],
+    // until 23:00:00
+    "end": [23, 0, 0]
+  }
+}
+
+// vim: filetype=jsonc

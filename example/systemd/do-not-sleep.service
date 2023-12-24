@@ -1,0 +1,13 @@
+[Unit]
+Description=DoNotSleep
+# After=mnt-disk1.mount mnt-disk2.mount
+
+[Service]
+User=user
+Group=group
+ExecStart=/usr/bin/do-not-sleep
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
