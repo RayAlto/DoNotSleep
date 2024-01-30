@@ -1,5 +1,6 @@
 #include "do_not_sleep/util.h"
 
+#include <bits/chrono.h>
 #include <chrono>
 #include <cstdint>
 #include <ctime>
@@ -9,6 +10,14 @@
 #include <ostream>
 
 namespace ds {
+
+std::int64_t current_time_ms() {
+  return current_time_ms(std::chrono::system_clock::now());
+}
+
+std::int64_t current_time_ms(const std::chrono::system_clock::time_point& t) {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(t.time_since_epoch()).count();
+}
 
 const std::tm& localtime_safe(const std::time_t& t) {
   static std::mutex localtime_mutex;

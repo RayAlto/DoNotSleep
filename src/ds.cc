@@ -1,32 +1,35 @@
 #include "do_not_sleep/ds.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
-#include <ctime>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
+#include <limits>
 #include <set>
 #include <thread>
 #include <utility>
 
 #include "do_not_sleep/config.h"
-#include "openssl/rand.h"
-
 #include "do_not_sleep/hms.h"
 #include "do_not_sleep/util.h"
 
 namespace ds {
 
-DoNotSleep::DoNotSleep() : config_{Config::from_json()} {
+DoNotSleep::DoNotSleep()
+  : config_{Config::from_json()}
+  , rand_engine_(current_time_ms() & std::numeric_limits<std::uint8_t>::max()) {
 }
 
 DoNotSleep::DoNotSleep(std::initializer_list<std::filesystem::path> dirs,
                        std::pair<HMS, HMS> time_range,
                        std::chrono::seconds interval)
-  : config_{.dirs = dirs, .time_range = time_range, .interval = interval} {
-  auto min = std::chrono::system_clock::time_point::min();
+  : config_{.dirs = dirs, .time_range = time_range, .interval = interval}
+  , rand_engine_(current_time_ms() & std::numeric_limits<std::uint8_t>::max()) {
 }
 
 void DoNotSleep::start() {
@@ -79,12 +82,8 @@ void DoNotSleep::tick_tock_(const std::filesystem::path& dir) {
   }
   std::ofstream ds_file{ds_filedir, std::ios::trunc | std::ios::binary};
   if (tick) {
-    unsigned char rand_byte_buf[DS_RAND_BYTE_COUNT_ + 1];
-    if (RAND_bytes(rand_byte_buf, DS_RAND_BYTE_COUNT_) <= 0) {
-      DS_LOGERR << "OpenSSL RAND_bytes call failed!\n";
-      ds_file.close();
-      return;
-    }
+    std::uint8_t rand_byte_buf[DS_RAND_BYTE_COUNT_ + 1];
+    std::generate_n(rand_byte_buf, DS_RAND_BYTE_COUNT_, std::ref(rand_engine_));
     DS_LOG << dir << " tick.\n" << std::flush;
     ds_file.write(reinterpret_cast<const char*>(rand_byte_buf), DS_RAND_BYTE_COUNT_);
   } else {

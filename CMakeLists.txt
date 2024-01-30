@@ -6,7 +6,6 @@ project(
   DESCRIPTION "Write random data periodically to storage devices that cannot be disabled from sleeping")
 option(BUILD_TESTS "Build sources in `/test` directory" ON)
 
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 
@@ -23,5 +22,4 @@ set(${CMAKE_PROJECT_NAME}_SRCS
 add_executable(${CMAKE_PROJECT_NAME} ${${CMAKE_PROJECT_NAME}_SRCS})
 target_compile_features(${CMAKE_PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${${CMAKE_PROJECT_NAME}_INCLUDES})
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OpenSSL::Crypto)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${JSONCPP_LIBRARIES})

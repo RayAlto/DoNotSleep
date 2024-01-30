@@ -3,14 +3,20 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <initializer_list>
+#include <limits>
+#include <random>
 #include <utility>
 
 #include "do_not_sleep/config.h"
 #include "do_not_sleep/hms.h"
 
 namespace ds {
+
+using RandByteEngine
+  = std::independent_bits_engine<std::mt19937, std::numeric_limits<std::uint8_t>::digits, std::uint8_t>;
 
 class DoNotSleep {
 public:
@@ -29,10 +35,11 @@ public:
 
 protected:
   Config config_;
+  RandByteEngine rand_engine_;
 
   bool sanitize_config_();
 
-  static void tick_tock_(const std::filesystem::path& dir);
+  void tick_tock_(const std::filesystem::path& dir);
 
   static const std::filesystem::path DS_FILENAME_;
   static const std::size_t DS_RAND_BYTE_COUNT_;
