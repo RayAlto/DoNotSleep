@@ -1,24 +1,19 @@
 #include "do_not_sleep/config.h"
 
 #include <chrono>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <optional>
 #include <string>
 #include <string_view>
 
+#include "pwd.h"
+#include "unistd.h"
+
 #include "json/json.h"
-#include <tuple>
 
-#include "do_not_sleep/platform.h"
 #include "do_not_sleep/util.h"
-
-#if DS_PLATFORM_WINDOWS == 0
-#  include <cstddef>
-
-#  include "pwd.h"
-#  include "unistd.h"
-#endif
 
 namespace ds {
 
@@ -219,17 +214,6 @@ bool operator!=(const Config& l, const Config& r) {
 const Config Config::UNSET{};
 
 const std::filesystem::path Config::CONFIG_DIR{[]() -> std::filesystem::path {
-#if DS_PLATFORM_WINDOWS == 1
-  std::optional<std::string> env_userprofile = getenv_safe("USERPROFILE");
-  if (env_userprofile.has_value()) {
-    return std::filesystem::path{env_userprofile.value()} / CONFIG_FILE;
-  }
-  std::optional<std::string> env_homedrive = getenv_safe("HOMEDRIVE");
-  std::optional<std::string> env_homepath = getenv_safe("HOMEPATH");
-  if (env_homedrive.has_value() && env_homepath.has_value()) {
-    return std::filesystem::path{env_homedrive.value()} / env_homepath.value() / CONFIG_FILE;
-  }
-#else
   std::size_t pwd_buf_len = sysconf(_SC_GETPW_R_SIZE_MAX);
   if (pwd_buf_len == -1) {
     pwd_buf_len = 4096;
@@ -245,7 +229,6 @@ const std::filesystem::path Config::CONFIG_DIR{[]() -> std::filesystem::path {
   if (env_home.has_value()) {
     return std::filesystem::path{env_home.value()} / CONFIG_FILE;
   }
-#endif
   DS_LOGERR << "failed to derive user directory, `ds::Config::CONFIG_DIR` need to be initialized manually!\n";
   return {};
 }()};

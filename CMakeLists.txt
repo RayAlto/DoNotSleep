@@ -25,13 +25,3 @@ target_compile_features(${CMAKE_PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${${CMAKE_PROJECT_NAME}_INCLUDES})
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OpenSSL::Crypto)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${JSONCPP_LIBRARIES})
-
-if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-  set(DS_PLATFORM_WINDOWS 1)
-else()
-  set(DS_PLATFORM_WINDOWS 0)
-endif()
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform.h.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/do_not_sleep/platform.h
-  @ONLY
-  NEWLINE_STYLE UNIX)
