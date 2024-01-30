@@ -37,7 +37,7 @@ Write random data to those dirs periodly.
 
 ## Build
 
-Requires [OpenSSL](https://www.openssl.org/) for random bytes, and [jsoncpp](https://github.com/open-source-parsers/jsoncpp) for parsing config.
+Requires [jsoncpp](https://github.com/open-source-parsers/jsoncpp) for parsing config.
 
 ```sh
 cmake -B build
