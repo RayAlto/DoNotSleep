@@ -16,8 +16,10 @@ namespace ds {
 
 std::int64_t current_time_ms();
 std::int64_t current_time_ms(const std::chrono::system_clock::time_point& t);
+
 const std::tm& localtime_safe(const std::time_t& t);
 std::optional<std::string> getenv_safe(std::string_view key);
+
 std::ostream& log_error(const std::string_view& file, const std::uint_fast32_t& line, const bool& err);
 
 } // namespace ds

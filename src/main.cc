@@ -1,4 +1,3 @@
-
 #include "do_not_sleep/ds.h"
 
 // NOLINTNEXTLINE(misc-unused-parameters)
