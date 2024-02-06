@@ -2,6 +2,7 @@
 #define DO_NOT_SLEEP_DO_NOT_SLEEP_CONFIG_H_
 
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <set>
 #include <utility>
@@ -11,9 +12,12 @@
 namespace ds {
 
 struct Config {
+  enum class Policy : std::uint8_t { INVALID, TIME_RANGE, MONITOR_IO };
   std::set<std::filesystem::path> dirs;
-  std::pair<HMS, HMS> time_range;
   std::chrono::seconds interval;
+  Policy policy;
+  std::pair<HMS, HMS> time_range;
+  std::chrono::seconds keep_awake;
 
   static Config from_json(const std::filesystem::path& config_dir = CONFIG_DIR);
 

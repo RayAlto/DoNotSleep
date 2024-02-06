@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 #include "pwd.h"
 #include "unistd.h"
@@ -16,6 +17,25 @@
 #include "do_not_sleep/util.h"
 
 namespace ds {
+
+Config::Policy policy_from_string(std::string_view str) {
+  static const std::unordered_map<std::string_view, Config::Policy> str2policy{
+    {"time_range", Config::Policy::TIME_RANGE},
+    {"monitor_io", Config::Policy::MONITOR_IO}
+  };
+  std::unordered_map<std::string_view, Config::Policy>::const_iterator policy_iter = str2policy.find(str);
+  if (policy_iter == str2policy.end()) {
+    std::string policies{};
+    for (const auto& [policy, _] : str2policy) {
+      policies += '`';
+      policies += policy;
+      policies += "` ";
+    }
+    DS_LOGERR << '`' << str << "` is not a valid policy ( " << policies << ")\n";
+    return Config::Policy::INVALID;
+  }
+  return policy_iter->second;
+}
 
 bool jsoncpp_load_json(const std::filesystem::path& json_dir, Json::Value& out_json) {
   if (!std::filesystem::is_regular_file(json_dir)) {
@@ -52,6 +72,7 @@ constexpr std::string_view jsoncpp_valuetype_str(const Json::ValueType& value_ty
 
 static const std::filesystem::path CONFIG_FILE = std::filesystem::path{".config"} / "do_not_sleep" / "conf";
 
+/* NOLINTNEXTLINE(readability-function-cognitive-complexity) */
 Config Config::from_json(const std::filesystem::path& config_dir) {
   Config conf;
   Json::Value conf_json;
@@ -76,111 +97,6 @@ Config Config::from_json(const std::filesystem::path& config_dir) {
     conf.dirs.emplace(dir_json.asString());
   }
 
-  Json::Value time_range_json = conf_json["time_range"];
-  if (time_range_json == Json::Value::null) {
-    DS_LOGERR << "failed to read key `time_range` from " << config_dir << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_start_json = time_range_json["start"];
-  if (time_range_start_json == Json::Value::null) {
-    DS_LOGERR << "failed to read key `time_range.start` from " << config_dir << ".\n";
-    return UNSET;
-  }
-  if (time_range_start_json.size() != 3) {
-    DS_LOGERR << "`time_range.start` should contain 3 items, got " << time_range_start_json.size() << " from "
-              << config_dir << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_start_0_json = time_range_start_json[0];
-  if (!time_range_start_0_json.isUInt()) {
-    DS_LOGERR << "`time_range.start.0` should be unsigned integer, got `" << time_range_start_0_json << "` which is "
-              << jsoncpp_valuetype_str(time_range_start_0_json.type()) << ", from " << config_dir << ".\n";
-    return UNSET;
-  }
-  conf.time_range.first.hours = time_range_start_0_json.asUInt();
-  if (conf.time_range.first.hours > 24) {
-    DS_LOGERR << "`time_range.start.0` represents the hour (0-24), got " << time_range_start_0_json << " from "
-              << config_dir << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_start_1_json = time_range_start_json[1];
-  if (!time_range_start_1_json.isUInt()) {
-    DS_LOGERR << "`time_range.start.1` should be unsigned integer, got `" << time_range_start_1_json << "` which is "
-              << jsoncpp_valuetype_str(time_range_start_1_json.type()) << ", from " << config_dir << ".\n";
-    return UNSET;
-  }
-  conf.time_range.first.minutes = time_range_start_1_json.asUInt();
-  if (conf.time_range.first.minutes > 60) {
-    DS_LOGERR << "`time_range.start.1` represents the minute (0-60), got " << time_range_start_1_json << " from "
-              << config_dir << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_start_2_json = time_range_start_json[2];
-  if (!time_range_start_2_json.isUInt()) {
-    DS_LOGERR << "`time_range.start.2` should be unsigned integer, got `" << time_range_start_2_json << "` which is "
-              << jsoncpp_valuetype_str(time_range_start_2_json.type()) << ", from " << config_dir << ".\n";
-    return UNSET;
-  }
-  conf.time_range.first.seconds = time_range_start_2_json.asUInt();
-  if (conf.time_range.first.seconds > 60) {
-    DS_LOGERR << "`time_range.start.2` represents the second (0-60), got " << time_range_start_2_json << " from "
-              << config_dir << ".\n";
-  }
-
-  Json::Value time_range_end_json = time_range_json["end"];
-  if (time_range_end_json == Json::Value::null) {
-    DS_LOGERR << "failed to read key `time_range.end` from " << config_dir << ".\n";
-    return UNSET;
-  }
-  if (time_range_end_json.size() != 3) {
-    DS_LOGERR << "`time_range.end` should contain 3 items, got " << time_range_end_json.size() << " from " << config_dir
-              << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_end_0_json = time_range_end_json[0];
-  if (!time_range_end_0_json.isUInt()) {
-    DS_LOGERR << "`time_range.end.0` should be unsigned integer, got `" << time_range_end_0_json << "` which is "
-              << jsoncpp_valuetype_str(time_range_end_0_json.type()) << ", from " << config_dir << ".\n";
-    return UNSET;
-  }
-  conf.time_range.second.hours = time_range_end_0_json.asUInt();
-  if (conf.time_range.second.hours > 24) {
-    DS_LOGERR << "`time_range.end.0` represents the hour (0-24), got " << time_range_end_0_json << " from "
-              << config_dir << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_end_1_json = time_range_end_json[1];
-  if (!time_range_end_1_json.isUInt()) {
-    DS_LOGERR << "`time_range.end.1` should be unsigned integer, got `" << time_range_end_1_json << "` which is "
-              << jsoncpp_valuetype_str(time_range_end_1_json.type()) << ", from " << config_dir << ".\n";
-    return UNSET;
-  }
-  conf.time_range.second.minutes = time_range_end_1_json.asUInt();
-  if (conf.time_range.second.minutes > 24) {
-    DS_LOGERR << "`time_range.end.1` represents the minute (0-60), got " << time_range_end_1_json << " from "
-              << config_dir << ".\n";
-    return UNSET;
-  }
-
-  Json::Value time_range_end_2_json = time_range_end_json[2];
-  if (!time_range_end_2_json.isUInt()) {
-    DS_LOGERR << "`time_range.end.1` should be unsigned integer, got `" << time_range_end_2_json << "` which is "
-              << jsoncpp_valuetype_str(time_range_end_2_json.type()) << ", from " << config_dir << ".\n";
-    return UNSET;
-  }
-  conf.time_range.second.seconds = time_range_end_2_json.asUInt();
-  if (conf.time_range.second.seconds > 24) {
-    DS_LOGERR << "`time_range.end.2` represents the second (0-60), got " << time_range_end_2_json << " from "
-              << config_dir << ".\n";
-    return UNSET;
-  }
-
   Json::Value interval_json = conf_json["interval"];
   if (interval_json == Json::Value::null) {
     DS_LOGERR << "failed to read key `interval` from " << config_dir << ".\n";
@@ -197,6 +113,146 @@ Config Config::from_json(const std::filesystem::path& config_dir) {
     return UNSET;
   }
 
+  Json::Value policy_json = conf_json["policy"];
+  if (policy_json == Json::Value::null) {
+    DS_LOGERR << "failed to read key `policy` from " << config_dir << ".\n";
+    return UNSET;
+  }
+  if (!policy_json.isString()) {
+    DS_LOGERR << "`policy` should be string, got `" << policy_json << "` which is "
+              << jsoncpp_valuetype_str(policy_json.type()) << ", from " << config_dir << ".\n";
+    return UNSET;
+  }
+  conf.policy = policy_from_string(policy_json.asString());
+  if (conf.policy == Policy::INVALID) {
+    DS_LOGERR << "`policy` is not valic, got `" << policy_json.asString() << "` from " << config_dir << ".\n";
+    return UNSET;
+  }
+
+  if (conf.policy == Policy::TIME_RANGE) {
+    Json::Value time_range_json = conf_json["time_range"];
+    if (time_range_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `time_range` from " << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_start_json = time_range_json["start"];
+    if (time_range_start_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `time_range.start` from " << config_dir << ".\n";
+      return UNSET;
+    }
+    if (time_range_start_json.size() != 3) {
+      DS_LOGERR << "`time_range.start` should contain 3 items, got " << time_range_start_json.size() << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_start_0_json = time_range_start_json[0];
+    if (!time_range_start_0_json.isUInt()) {
+      DS_LOGERR << "`time_range.start.0` should be unsigned integer, got `" << time_range_start_0_json << "` which is "
+                << jsoncpp_valuetype_str(time_range_start_0_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.time_range.first.hours = time_range_start_0_json.asUInt();
+    if (conf.time_range.first.hours > 24) {
+      DS_LOGERR << "`time_range.start.0` represents the hour (0-24), got " << time_range_start_0_json << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_start_1_json = time_range_start_json[1];
+    if (!time_range_start_1_json.isUInt()) {
+      DS_LOGERR << "`time_range.start.1` should be unsigned integer, got `" << time_range_start_1_json << "` which is "
+                << jsoncpp_valuetype_str(time_range_start_1_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.time_range.first.minutes = time_range_start_1_json.asUInt();
+    if (conf.time_range.first.minutes > 60) {
+      DS_LOGERR << "`time_range.start.1` represents the minute (0-60), got " << time_range_start_1_json << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_start_2_json = time_range_start_json[2];
+    if (!time_range_start_2_json.isUInt()) {
+      DS_LOGERR << "`time_range.start.2` should be unsigned integer, got `" << time_range_start_2_json << "` which is "
+                << jsoncpp_valuetype_str(time_range_start_2_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.time_range.first.seconds = time_range_start_2_json.asUInt();
+    if (conf.time_range.first.seconds > 60) {
+      DS_LOGERR << "`time_range.start.2` represents the second (0-60), got " << time_range_start_2_json << " from "
+                << config_dir << ".\n";
+    }
+
+    Json::Value time_range_end_json = time_range_json["end"];
+    if (time_range_end_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `time_range.end` from " << config_dir << ".\n";
+      return UNSET;
+    }
+    if (time_range_end_json.size() != 3) {
+      DS_LOGERR << "`time_range.end` should contain 3 items, got " << time_range_end_json.size() << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_end_0_json = time_range_end_json[0];
+    if (!time_range_end_0_json.isUInt()) {
+      DS_LOGERR << "`time_range.end.0` should be unsigned integer, got `" << time_range_end_0_json << "` which is "
+                << jsoncpp_valuetype_str(time_range_end_0_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.time_range.second.hours = time_range_end_0_json.asUInt();
+    if (conf.time_range.second.hours > 24) {
+      DS_LOGERR << "`time_range.end.0` represents the hour (0-24), got " << time_range_end_0_json << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_end_1_json = time_range_end_json[1];
+    if (!time_range_end_1_json.isUInt()) {
+      DS_LOGERR << "`time_range.end.1` should be unsigned integer, got `" << time_range_end_1_json << "` which is "
+                << jsoncpp_valuetype_str(time_range_end_1_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.time_range.second.minutes = time_range_end_1_json.asUInt();
+    if (conf.time_range.second.minutes > 24) {
+      DS_LOGERR << "`time_range.end.1` represents the minute (0-60), got " << time_range_end_1_json << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value time_range_end_2_json = time_range_end_json[2];
+    if (!time_range_end_2_json.isUInt()) {
+      DS_LOGERR << "`time_range.end.1` should be unsigned integer, got `" << time_range_end_2_json << "` which is "
+                << jsoncpp_valuetype_str(time_range_end_2_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.time_range.second.seconds = time_range_end_2_json.asUInt();
+    if (conf.time_range.second.seconds > 24) {
+      DS_LOGERR << "`time_range.end.2` represents the second (0-60), got " << time_range_end_2_json << " from "
+                << config_dir << ".\n";
+      return UNSET;
+    }
+  } else if (conf.policy == Policy::MONITOR_IO) {
+    Json::Value monitor_io_json = conf_json["monitor_io"];
+    if (monitor_io_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `monitor_io` from " << config_dir << ".\n";
+      return UNSET;
+    }
+
+    Json::Value keep_awake_json = monitor_io_json["keep_awake"];
+    if (keep_awake_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `monitor_io.keep_awake` from " << config_dir << ".\n";
+      return UNSET;
+    }
+    if (!keep_awake_json.isUInt()) {
+      DS_LOGERR << "`monitor_io.keep_awake` should be unsigned integer, got `" << keep_awake_json << "` which is "
+                << jsoncpp_valuetype_str(keep_awake_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.keep_awake = std::chrono::seconds{keep_awake_json.asUInt()};
+  }
   return conf;
 }
 

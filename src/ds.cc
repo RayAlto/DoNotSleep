@@ -26,9 +26,16 @@ DoNotSleep::DoNotSleep()
 }
 
 DoNotSleep::DoNotSleep(std::initializer_list<std::filesystem::path> dirs,
-                       std::pair<HMS, HMS> time_range,
-                       std::chrono::seconds interval)
-  : config_{.dirs = dirs, .time_range = time_range, .interval = interval}
+                       std::chrono::seconds interval,
+                       std::pair<HMS, HMS> time_range)
+  : config_{.dirs = dirs, .interval = interval, .policy = Config::Policy::TIME_RANGE, .time_range = time_range}
+  , rand_engine_(current_time_ms() & std::numeric_limits<std::uint8_t>::max()) {
+}
+
+DoNotSleep::DoNotSleep(std::initializer_list<std::filesystem::path> dirs,
+                       std::chrono::seconds interval,
+                       std::chrono::seconds keep_awake)
+  : config_{.dirs = dirs, .interval = interval, .policy = Config::Policy::MONITOR_IO, .keep_awake = keep_awake}
   , rand_engine_(current_time_ms() & std::numeric_limits<std::uint8_t>::max()) {
 }
 

@@ -7,11 +7,16 @@
   ],
   // every 2 minutes
   "interval": 120,
+  "policy": "time_range",
   "time_range": {
     // start from 07:00:00
     "start": [7, 0, 0],
     // until 23:00:00
     "end": [23, 0, 0]
+  },
+  "monitor_io": {
+    // keep awake for 30 minutes
+    "keep_awake": 1800
   }
 }
 

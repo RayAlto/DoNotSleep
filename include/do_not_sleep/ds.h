@@ -22,8 +22,11 @@ class DoNotSleep {
 public:
   DoNotSleep();
   DoNotSleep(std::initializer_list<std::filesystem::path> dirs,
-             std::pair<HMS, HMS> time_range = {HMS::UNSET, HMS::UNSET},
-             std::chrono::seconds interval = std::chrono::seconds{30});
+             std::chrono::seconds interval = std::chrono::seconds{30},
+             std::pair<HMS, HMS> time_range = {HMS::UNSET, HMS::UNSET});
+  DoNotSleep(std::initializer_list<std::filesystem::path> dirs,
+             std::chrono::seconds interval = std::chrono::seconds{30},
+             std::chrono::seconds keep_awake = std::chrono::seconds{300});
   DoNotSleep(const DoNotSleep&) = default;
   DoNotSleep(DoNotSleep&&) noexcept = default;
   DoNotSleep& operator=(const DoNotSleep&) = default;
