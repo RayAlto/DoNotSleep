@@ -241,6 +241,19 @@ Config Config::from_json(const std::filesystem::path& config_dir) {
       return UNSET;
     }
 
+    Json::Value scan_frequency_json = monitor_io_json["scan_frequency"];
+    if (scan_frequency_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `monitor_io.scan_frequency` from " << config_dir << ".\n";
+      return UNSET;
+    }
+    if (!scan_frequency_json.isUInt()) {
+      DS_LOGERR << "`monitor_io.scan_frequency` should be unsigned integer, got `" << scan_frequency_json
+                << "` which is " << jsoncpp_valuetype_str(scan_frequency_json.type()) << ", from " << config_dir
+                << ".\n";
+      return UNSET;
+    }
+    conf.scan_frequency = std::chrono::seconds{scan_frequency_json.asUInt()};
+
     Json::Value keep_awake_json = monitor_io_json["keep_awake"];
     if (keep_awake_json == Json::Value::null) {
       DS_LOGERR << "failed to read key `monitor_io.keep_awake` from " << config_dir << ".\n";

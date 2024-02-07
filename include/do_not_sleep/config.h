@@ -17,6 +17,7 @@ struct Config {
   std::chrono::seconds interval;
   Policy policy;
   std::pair<HMS, HMS> time_range;
+  std::chrono::seconds scan_frequency;
   std::chrono::seconds keep_awake;
 
   static Config from_json(const std::filesystem::path& config_dir = CONFIG_DIR);
