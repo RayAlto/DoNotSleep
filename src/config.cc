@@ -253,6 +253,11 @@ Config Config::from_json(const std::filesystem::path& config_dir) {
       return UNSET;
     }
     conf.scan_frequency = std::chrono::seconds{scan_frequency_json.asUInt()};
+    if (conf.scan_frequency > conf.interval) {
+      DS_LOGERR << "scan_frequency should not be greater than interval (" << conf.scan_frequency.count() << " > "
+                << conf.interval.count() << ").\n";
+      return UNSET;
+    }
 
     Json::Value keep_awake_json = monitor_io_json["keep_awake"];
     if (keep_awake_json == Json::Value::null) {
