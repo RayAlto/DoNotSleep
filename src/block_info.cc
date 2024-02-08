@@ -1,5 +1,6 @@
 #include "do_not_sleep/block_info.h"
 
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -11,12 +12,16 @@
 
 namespace ds {
 
+const std::pair<std::uint64_t, std::uint64_t> BlockInfo::NO_IO{0, 0};
 const std::filesystem::path BlockInfo::MOUNT_INFO_PATH{"/proc/self/mountinfo"};
 const std::filesystem::path BlockInfo::SYS_BLOCK_PATH{"/sys/block"};
 const std::filesystem::path BlockInfo::BLOCK_STAT_NAME{"stat"};
+const std::filesystem::path BlockInfo::SELF_IO{"/proc/self/io"};
 
 /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
 std::unordered_map<std::filesystem::path, std::filesystem::path> BlockInfo::mount_list;
+/* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+std::pair<std::uint64_t, std::uint64_t> BlockInfo::self_last_io;
 
 BlockInfo BlockInfo::from_mount_path(const std::filesystem::path& mount_path) {
   if (!std::filesystem::is_directory(mount_path)) {
@@ -55,6 +60,24 @@ BlockInfo BlockInfo::from_block_name(const std::filesystem::path& block_name) {
     }
   }
   throw std::runtime_error{"could not find info about `" + block_name.string() + "` in " + MOUNT_INFO_PATH.string()};
+}
+
+std::pair<std::uint64_t, std::uint64_t> BlockInfo::self_io_taken() {
+  std::pair<std::uint64_t, std::uint64_t> result;
+  std::uint64_t count{0};
+  std::string label;
+  std::ifstream self_io(SELF_IO);
+  while (!self_io.eof()) {
+    self_io >> label >> count;
+    if (label == "syscr:") {
+      result.first = count - self_last_io.first;
+      self_last_io.first = count;
+    } else if (label == "syscw:") {
+      result.second = count - self_last_io.second;
+      self_last_io.second = count;
+    }
+  }
+  return result;
 }
 
 [[nodiscard]] std::uint64_t BlockInfo::total_reads() const {
@@ -171,9 +194,7 @@ std::pair<std::uint64_t, std::uint64_t> BlockInfo::get_io_statistics(const std::
   }
   std::uint64_t reads{0};
   std::uint64_t writes{0};
-  for (int i = 0; i < 3; i++) {
-    stat >> reads;
-  }
+  stat >> reads;
   for (int i = 0; i < 4; i++) {
     stat >> writes;
   }

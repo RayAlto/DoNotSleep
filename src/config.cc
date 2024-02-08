@@ -235,6 +235,12 @@ Config Config::from_json(const std::filesystem::path& config_dir) {
       return UNSET;
     }
   } else if (conf.policy == Policy::MONITOR_IO) {
+    // ============================================================
+    // TODO(rayalto): fix this shit
+    DS_LOGERR << "monitor_io policy is currently unavailable.\n";
+    return UNSET;
+    // ============================================================
+
     Json::Value monitor_io_json = conf_json["monitor_io"];
     if (monitor_io_json == Json::Value::null) {
       DS_LOGERR << "failed to read key `monitor_io` from " << config_dir << ".\n";

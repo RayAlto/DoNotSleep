@@ -18,8 +18,7 @@ public:
 
   virtual ~BlockInfo() = default;
 
-  // https://docs.kernel.org/block/stat.html#read-sectors-write-sectors-discard-sectors
-  static constexpr const std::uint64_t SECTOR_SIZE = 512 /* bytes */;
+  static const std::pair<std::uint64_t, std::uint64_t> NO_IO;
 
   // e.g. `/mnt/usb_disk`
   static BlockInfo from_mount_path(const std::filesystem::path& mount_path);
@@ -27,6 +26,8 @@ public:
   static BlockInfo from_block_path(const std::filesystem::path& block_path);
   // e.g. `sda1`
   static BlockInfo from_block_name(const std::filesystem::path& block_name);
+
+  static std::pair<std::uint64_t, std::uint64_t> self_io_taken();
 
   // from the stat file
   [[nodiscard]] std::uint64_t total_reads() const;
@@ -43,9 +44,12 @@ protected:
   static const std::filesystem::path MOUNT_INFO_PATH;
   static const std::filesystem::path SYS_BLOCK_PATH;
   static const std::filesystem::path BLOCK_STAT_NAME;
+  static const std::filesystem::path SELF_IO;
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   static std::unordered_map<std::filesystem::path, std::filesystem::path> mount_list;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  static std::pair<std::uint64_t, std::uint64_t> self_last_io;
 
   static void update_mount_list(const bool& force = false);
   static std::filesystem::path find_block_stat(const std::filesystem::path& block_device);

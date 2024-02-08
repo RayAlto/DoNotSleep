@@ -26,6 +26,7 @@ public:
              std::pair<HMS, HMS> time_range = {HMS::UNSET, HMS::UNSET});
   DoNotSleep(std::initializer_list<std::filesystem::path> dirs,
              std::chrono::seconds interval = std::chrono::seconds{30},
+             std::chrono::seconds scan_frequency = std::chrono::seconds{1},
              std::chrono::seconds keep_awake = std::chrono::seconds{300});
   DoNotSleep(const DoNotSleep&) = default;
   DoNotSleep(DoNotSleep&&) noexcept = default;
@@ -37,15 +38,18 @@ public:
   void start();
 
 protected:
-  Config config_;
-  RandByteEngine rand_engine_;
+  Config config;
+  RandByteEngine rand_engine;
 
-  bool sanitize_config_();
+  // time range mode
+  void start_time_range();
+  // monitor io mode
+  void start_monitor_io();
+  bool sanitize_config();
+  void tick_tock(const std::filesystem::path& dir);
 
-  void tick_tock_(const std::filesystem::path& dir);
-
-  static const std::filesystem::path DS_FILENAME_;
-  static const std::size_t DS_RAND_BYTE_COUNT_;
+  static const std::filesystem::path DS_FILENAME;
+  static const std::size_t DS_RAND_BYTE_COUNT;
 };
 
 } // namespace ds
