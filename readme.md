@@ -61,7 +61,7 @@ this program will monitor I/O operations of disks in `dirs`, if a I/O is monitor
 
 ### Service available mode
 
-```json
+```jsonc
 {
   "dirs": [
     "/mnt/disk1",
