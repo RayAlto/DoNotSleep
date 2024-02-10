@@ -14,12 +14,14 @@
     // until 23:00:00
     "end": [23, 0, 0]
   },
-  "monitor_io": {
+  "monitor_io": { // CURRENTLY UNAVAILABLE
     // scan I/O operations every 1 second
     "scan_frequency": 1,
     // keep awake for 30 minutes
     "keep_awake": 1800
-  }
+  },
+  // tcp 10.0.0.1:22
+  "service_available": "10.0.0.1:22"
 }
 
 // vim: filetype=jsonc

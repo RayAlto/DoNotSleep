@@ -65,6 +65,7 @@ void DoNotSleep::start() {
   switch (config.policy) {
     case Config::Policy::TIME_RANGE: start_time_range(); break;
     case Config::Policy::MONITOR_IO: start_monitor_io(); break;
+    case Config::Policy::SERVICE_AVAILABLE: start_service_available(); break;
     default: DS_LOGERR << "invalid policy, stopped.\n"; return;
   }
 }
@@ -137,6 +138,19 @@ void DoNotSleep::start_monitor_io() {
       }
     }
     std::this_thread::sleep_for(config.scan_frequency);
+  }
+}
+
+void DoNotSleep::start_service_available() {
+  while (true) {
+    if (service_available(config.service)) {
+      for (const std::filesystem::path& dir : config.dirs) {
+        tick_tock(dir);
+      }
+    } else {
+      DS_LOG << "zzz\n" << std::flush;
+    }
+    std::this_thread::sleep_for(config.interval);
   }
 }
 

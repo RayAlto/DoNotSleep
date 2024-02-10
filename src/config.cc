@@ -20,8 +20,9 @@ namespace ds {
 
 Config::Policy policy_from_string(std::string_view str) {
   static const std::unordered_map<std::string_view, Config::Policy> str2policy{
-    {"time_range", Config::Policy::TIME_RANGE},
-    {"monitor_io", Config::Policy::MONITOR_IO}
+    {"time_range",        Config::Policy::TIME_RANGE       },
+    {"monitor_io",        Config::Policy::MONITOR_IO       },
+    {"service_available", Config::Policy::SERVICE_AVAILABLE}
   };
   std::unordered_map<std::string_view, Config::Policy>::const_iterator policy_iter = str2policy.find(str);
   if (policy_iter == str2policy.end()) {
@@ -276,6 +277,18 @@ Config Config::from_json(const std::filesystem::path& config_dir) {
       return UNSET;
     }
     conf.keep_awake = std::chrono::seconds{keep_awake_json.asUInt()};
+  } else if (conf.policy == Policy::SERVICE_AVAILABLE) {
+    Json::Value service_available_json = conf_json["service_available"];
+    if (service_available_json == Json::Value::null) {
+      DS_LOGERR << "failed to read key `service_available` from " << config_dir << ".\n";
+      return UNSET;
+    }
+    if (!service_available_json.isString()) {
+      DS_LOGERR << "`service_available` should be string, got `" << service_available_json << "` which is "
+                << jsoncpp_valuetype_str(service_available_json.type()) << ", from " << config_dir << ".\n";
+      return UNSET;
+    }
+    conf.service = service_available_json.asString();
   }
   return conf;
 }

@@ -41,10 +41,9 @@ protected:
   Config config;
   RandByteEngine rand_engine;
 
-  // time range mode
   void start_time_range();
-  // monitor io mode
   void start_monitor_io();
+  void start_service_available();
   bool sanitize_config();
   void tick_tock(const std::filesystem::path& dir);
 
